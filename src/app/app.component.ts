@@ -3,6 +3,7 @@ import { Component, OnInit, } from '@angular/core';
 import {CoinMarketService} from './coinmarket/coinmarket.service';
 import {CryptoCompareService} from './cryptocompare/cryptocompare.service';
 
+import * as tfy from 'taffy';
 
 @Component({
   selector: 'app-root',
@@ -12,7 +13,7 @@ import {CryptoCompareService} from './cryptocompare/cryptocompare.service';
 })
 export class AppComponent {
   title = 'Crypto Quant';
-  private limit=20;
+  private limit=30;
   private coinData;
   private Top7Day;
   private Top24h;
@@ -28,7 +29,13 @@ export class AppComponent {
 
   constructor(private coinservice: CoinMarketService,
               private cryptocompare: CryptoCompareService
-            ){}
+            ){
+              let cities = TAFFY([{name:"New York",state:"WA"},{name:"Las Vegas",state:"NV"},{name:"Boston",state:"MA"}]);
+
+              cities.insert({name:"Portland",state:"OR"});
+
+              //alert(cities({name:"Portland"}).count());
+            }
 
   ngOnInit(){
     let $this = this;
@@ -76,15 +83,38 @@ export class AppComponent {
     
   }
 
+  getCurrentVolumeChange(volSrc){
+    let $this = this;
+    let curVol = 0;
+    if(volSrc['Response']=='Success'){
+      volSrc['Data'].forEach(src => {
+         if ($this.isInToday(src['time']))
+          curVol = src['volumeto'];
+      });
+      return curVol;
+    }
+    else
+      return 0;
+  }
+
+  isInToday(inputDate)
+  {
+    var today = new Date();
+    var input = new Date(inputDate*1000);
+    if(today.setHours(0,0,0,0) == input.setHours(0,0,0,0)){ return true; }
+    else { return false; }  
+  }
+
   getVolumBuzz(coin){
     let $this = this;
     let buzz;
-    let current = coin['24h_volume_usd'];
 
     this.getHistoData(coin).subscribe(histo => {
       let ave = $this.getAveVolumeChange(histo);
+      let current = $this.getCurrentVolumeChange(histo);
       let percentIncrease = (current-ave)/ave * 100;
-      if(percentIncrease > 100){
+
+      if(percentIncrease > 50){
         buzz = coin['symbol'] + ': ' + percentIncrease + '% ';
         console.log('buzz: ', buzz);
         this.volBuzz.push(buzz);
