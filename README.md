@@ -13,3 +13,16 @@ Add limits to the snapshot by inputting a number.
 ## Caveat
 
 Data from this app is not an investment advice, please take responsibilities for your own trade.
+
+## Feature Roadmap
+
+- Filter by input
+- Exceptions - Remove a symbol when filtering coins
+- Watchlist - Add a symbol to your watchlist (Automatically loads your watchlist data)
+- Receive notifications based on your parameters e.g. price fluctuations
+
+## Existing Features
+
+- 10 day Volume buzzes
+- Price Ranking
+- Volume Ranking
