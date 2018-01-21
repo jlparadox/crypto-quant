@@ -2,6 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 
 import {CoinMarketService} from './coinmarket/coinmarket.service';
 import {CryptoCompareService} from './cryptocompare/cryptocompare.service';
+import { LocalStorageService } from 'angular-2-local-storage';
 
 import * as tfy from 'taffy';
 
@@ -13,7 +14,7 @@ import * as tfy from 'taffy';
 })
 export class AppComponent {
   title = 'Crypto Quant';
-  private limit=30;
+  private limit=100;
   private coinData;
   private Top7Day;
   private Top24h;
@@ -28,14 +29,9 @@ export class AppComponent {
 
 
   constructor(private coinservice: CoinMarketService,
-              private cryptocompare: CryptoCompareService
-            ){
-              let cities = TAFFY([{name:"New York",state:"WA"},{name:"Las Vegas",state:"NV"},{name:"Boston",state:"MA"}]);
-
-              cities.insert({name:"Portland",state:"OR"});
-
-              //alert(cities({name:"Portland"}).count());
-            }
+              private cryptocompare: CryptoCompareService,
+              private localStorageService: LocalStorageService
+            ){}
 
   ngOnInit(){
     let $this = this;
@@ -72,53 +68,52 @@ export class AppComponent {
 
     if(volSrc['Response']=='Success'){
       volSrc['Data'].forEach(src => {
+        //console.log('volume: ', src['volumeto']);
         aggregateVol.push(src['volumeto']);
       });
-    }
-    
-    if(aggregateVol.length > 0){
-      let sum = aggregateVol.reduce((previous, current) => current += previous);
-      return (sum / aggregateVol.length);
+      if(aggregateVol.length > 0){
+        let sum = aggregateVol.reduce((previous, current) => current += previous);
+        return (sum / aggregateVol.length);
+      }
     }
     
   }
 
   getCurrentVolumeChange(volSrc){
     let $this = this;
-    let curVol = 0;
-    if(volSrc['Response']=='Success'){
-      volSrc['Data'].forEach(src => {
-         if ($this.isInToday(src['time']))
-          curVol = src['volumeto'];
-      });
-      return curVol;
-    }
-    else
-      return 0;
+    let curDate;
+    return new Promise((resolve, reject) => {
+      if(volSrc['Response']=='Success'){
+        curDate = (Math.max.apply(null, volSrc['Data'].map(function(src) {
+          return new Date(src['time']);
+        })));
+  
+        volSrc['Data'].forEach(src => {
+           if (src['time'] == curDate){
+              resolve(src['volumeto']);
+           }
+        });
+      }
+      else
+        resolve(0);
+    });
   }
 
-  isInToday(inputDate)
-  {
-    var today = new Date();
-    var input = new Date(inputDate*1000);
-    if(today.setHours(0,0,0,0) == input.setHours(0,0,0,0)){ return true; }
-    else { return false; }  
-  }
-
-  getVolumBuzz(coin){
+  getVolumBuzz(coin, increase=50){
     let $this = this;
     let buzz;
 
     this.getHistoData(coin).subscribe(histo => {
       let ave = $this.getAveVolumeChange(histo);
-      let current = $this.getCurrentVolumeChange(histo);
-      let percentIncrease = (current-ave)/ave * 100;
-
-      if(percentIncrease > 50){
-        buzz = coin['symbol'] + ': ' + percentIncrease + '% ';
-        console.log('buzz: ', buzz);
-        this.volBuzz.push(buzz);
-      }
+      $this.getCurrentVolumeChange(histo).then(current=> {
+        let percentIncrease = (Number(current)-ave)/ave * 100;
+        if(percentIncrease > increase){
+          buzz = coin['symbol'] + ': ' + percentIncrease + '% ';
+          $this.volBuzz.push(buzz);
+          $this.localStorageService.set('volume_buzz', $this.volBuzz);
+        }
+      });
+      
     });
 
   }
