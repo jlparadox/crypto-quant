@@ -102,6 +102,7 @@ export class AppComponent {
   getVolumBuzz(coin, increase=50){
     let $this = this;
     let buzz;
+    this.volBuzz = $this.localStorageService.get('volume_buzz');
 
     this.getHistoData(coin).subscribe(histo => {
       let ave = $this.getAveVolumeChange(histo);
