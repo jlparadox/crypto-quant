@@ -109,9 +109,12 @@ export class AppComponent {
       $this.getCurrentVolumeChange(histo).then(current=> {
         let percentIncrease = (Number(current)-ave)/ave * 100;
         if(percentIncrease > increase){
-          buzz = coin['symbol'] + ': ' + percentIncrease + '% ';
-          $this.volBuzz.push(buzz);
-          $this.localStorageService.set('volume_buzz', $this.volBuzz);
+          buzz = this.formatDate(new Date()) + ': ' + coin['symbol'] + ': ' + percentIncrease + '% ';
+          if(this.volBuzz.indexOf(buzz) < -1){
+            console.log('buzz!:', buzz);
+            $this.volBuzz.push(buzz);
+            $this.localStorageService.set('volume_buzz', $this.volBuzz);
+          }
         }
       });
       
@@ -124,6 +127,15 @@ export class AppComponent {
         let d = new Date();
         d.setDate(coin['last_updated']);
     });
+  }
+
+  formatDate(date){
+    let today = new Date();
+    let dd = today.getDate();
+    let mm = today.getMonth()+1; //January is 0!
+    let yyyy = today.getFullYear();
+
+    return mm + '/' + dd + '/' + yyyy;
   }
 
   getTopCoin(data, field, param, isValOnly=false){
