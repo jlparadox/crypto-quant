@@ -10,6 +10,11 @@
 <app-watch-list-form></app-watch-list-form>
 <h2>Top Losers: </h2>
 <ul>
+  <li class="text" *ngFor="let item of items | async">
+    {{item.name}}{{item.symbol}}
+  </li>
+</ul>
+<ul>
   <li>
     <h3>Last Gainer 24 hrs:</h3>{{ Last24h }}
   </li>

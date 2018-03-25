@@ -1,8 +1,10 @@
-import { Component, OnInit, } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 
 import {CoinMarketService} from './coinmarket/coinmarket.service';
 import {CryptoCompareService} from './cryptocompare/cryptocompare.service';
-import { LocalStorageService } from 'angular-2-local-storage';
+import {LocalStorageService} from 'angular-2-local-storage';
+import {AngularFirestore} from 'angularfire2/firestore';
+import {Observable} from 'rxjs/Observable';
 
 import * as tfy from 'taffy';
 
@@ -10,181 +12,189 @@ import * as tfy from 'taffy';
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  providers:[CoinMarketService]
+  providers: [CoinMarketService]
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   title = 'Crypto Quant';
-  private limit=100;
+  private limit = 100;
   private coinData;
   private Top7Day;
   private Top24h;
   private Top1H;
   private TopVol;
   private lastUpdated;
-  private Last7Day;
-  private Last24h;
-  private Last1H;
+  Last7Day;
+  Last24h;
+  Last1H;
   private volBuzz = [];
   private d;
+  items: Observable<any[]>;
 
 
   constructor(private coinservice: CoinMarketService,
               private cryptocompare: CryptoCompareService,
-              private localStorageService: LocalStorageService
-            ){}
-
-  ngOnInit(){
-    let $this = this;
-    this.coinservice.getCoinData(this.limit).subscribe(
-                data => {
-                    this.Top24h = this.getTopCoin(data, 'percent_change_24h', 'max');
-                    this.Top7Day = this.getTopCoin(data, 'percent_change_7d', 'max');
-                    this.Top1H = this.getTopCoin(data, 'percent_change_1h', 'max');
-                    this.TopVol = this.getTopCoin(data, '24h_volume_usd', 'max');
-                    this.Last24h = this.getTopCoin(data, 'percent_change_24h', 'min');
-                    this.Last7Day = this.getTopCoin(data, 'percent_change_7d', 'min');
-                    this.Last1H = this.getTopCoin(data, 'percent_change_1h', 'min');
-                    this.lastUpdated = this.getUpdatedDate(data);
-                    //this.getTop10Vol(data);
-
-                    data.forEach(coin => {
-                        $this.getVolumBuzz(coin);
-                    });
-                },
-                err => {
-                    console.log(err);
-                }
-            );
+              private localStorageService: LocalStorageService,
+              private db: AngularFirestore) {
+    this.items = db.collection('watchlist').valueChanges();
+    this.items.subscribe(items => {
+      for (const item of items) {
+        console.log(item.name);
+      }
+    });
   }
 
-  getHistoData(coin){
-    let s = coin['symbol'];
+  ngOnInit() {
+    const $this = this;
+    this.coinservice.getCoinData(this.limit).subscribe(
+      data => {
+        this.Top24h = this.getTopCoin(data, 'percent_change_24h', 'max');
+        this.Top7Day = this.getTopCoin(data, 'percent_change_7d', 'max');
+        this.Top1H = this.getTopCoin(data, 'percent_change_1h', 'max');
+        this.TopVol = this.getTopCoin(data, '24h_volume_usd', 'max');
+        this.Last24h = this.getTopCoin(data, 'percent_change_24h', 'min');
+        this.Last7Day = this.getTopCoin(data, 'percent_change_7d', 'min');
+        this.Last1H = this.getTopCoin(data, 'percent_change_1h', 'min');
+        this.lastUpdated = this.getUpdatedDate(data);
+
+        data.forEach(coin => {
+          $this.getVolumeBuzz(coin);
+        });
+      },
+      err => {
+        console.log(err);
+      }
+    );
+  }
+
+  getHistoData(coin) {
+    const s = coin['symbol'];
 
     return this.cryptocompare.getHistoData(s);
   }
 
-  getAveVolumeChange(volSrc){
-    let aggregateVol = [];
+  getAveVolumeChange(volSrc) {
+    const aggregateVol = [];
 
-    if(volSrc['Response']=='Success'){
+    if (volSrc['Response'] === 'Success') {
       volSrc['Data'].forEach(src => {
-        //console.log('volume: ', src['volumeto']);
         aggregateVol.push(src['volumeto']);
       });
-      if(aggregateVol.length > 0){
-        let sum = aggregateVol.reduce((previous, current) => current += previous);
+      if (aggregateVol.length > 0) {
+        const sum = aggregateVol.reduce((previous, current) => current += previous);
         return (sum / aggregateVol.length);
       }
     }
-    
+
   }
 
-  getCurrentVolumeChange(volSrc){
-    let $this = this;
+  getCurrentVolumeChange(volSrc) {
+    const $this = this;
     let curDate;
     return new Promise((resolve, reject) => {
-      if(volSrc['Response']=='Success'){
-        curDate = (Math.max.apply(null, volSrc['Data'].map(function(src) {
+      if (volSrc['Response'] === 'Success') {
+        curDate = (Math.max.apply(null, volSrc['Data'].map(function (src) {
           return new Date(src['time']);
         })));
-  
+
         volSrc['Data'].forEach(src => {
-           if (src['time'] == curDate){
-              resolve(src['volumeto']);
-           }
+          if (src['time'] === curDate) {
+            resolve(src['volumeto']);
+          }
         });
-      }
-      else
+      } else {
         resolve(0);
+      }
     });
   }
 
-  getVolumBuzz(coin, increase=50){
-    let $this = this;
+  getVolumeBuzz(coin, increase = 50) {
+    const $this = this;
     let buzz;
     this.volBuzz = $this.localStorageService.get('volume_buzz');
 
     this.getHistoData(coin).subscribe(histo => {
-      let ave = $this.getAveVolumeChange(histo);
-      $this.getCurrentVolumeChange(histo).then(current=> {
-        let percentIncrease = (Number(current)-ave)/ave * 100;
-        if(percentIncrease > increase){
+      const ave = $this.getAveVolumeChange(histo);
+      $this.getCurrentVolumeChange(histo).then(current => {
+        const percentIncrease = (Number(current) - ave) / ave * 100;
+        if (percentIncrease > increase) {
           buzz = this.formatDate(new Date()) + ': ' + coin['symbol'] + ': ' + percentIncrease + '% ';
-          if(this.volBuzz.indexOf(buzz) < -1){
+          if (this.volBuzz.indexOf(buzz) < -1) {
             console.log('buzz!:', buzz);
             $this.volBuzz.push(buzz);
             $this.localStorageService.set('volume_buzz', $this.volBuzz);
           }
         }
       });
-      
+
     });
 
   }
 
-  getUpdatedDate(data){
+  getUpdatedDate(data) {
     data.forEach(coin => {
-        let d = new Date();
-        d.setDate(coin['last_updated']);
+      const d = new Date();
+      d.setDate(coin['last_updated']);
     });
   }
 
-  formatDate(date){
-    let today = new Date();
-    let dd = today.getDate();
-    let mm = today.getMonth()+1; //January is 0!
-    let yyyy = today.getFullYear();
+  formatDate(date) {
+    const today = new Date();
+    const dd = today.getDate();
+    const mm = today.getMonth() + 1; // January is 0!
+    const yyyy = today.getFullYear();
 
     return mm + '/' + dd + '/' + yyyy;
   }
 
-  getTopCoin(data, field, param, isValOnly=false){
-      let coinsChange = [];
-      data.forEach(coin => {
-        coinsChange.push(Math.round(coin[field]));
-      });
+  getTopCoin(data, field, param, isValOnly = false) {
+    const coinsChange = [];
+    data.forEach(coin => {
+      coinsChange.push(Math.round(coin[field]));
+    });
 
-      let top = coinsChange.reduce(function(a, b) {
-          if(param=='max')
-            return Math.max(a, b);
-          else
-            return Math.min(a, b);
-      });
+    const top = coinsChange.reduce(function (a, b) {
+      if (param === 'max') {
+        return Math.max(a, b);
+      } else {
+        return Math.min(a, b);
+      }
+    });
 
-      let i = coinsChange.indexOf(top);
-          
-      if(i>-1)
-        if(!isValOnly)
-          return ('symbol: ' + data[i]['symbol'] + ' name: ' + data[i]['name'] + ': ' + top);
-        else
-          return top;
+    const i = coinsChange.indexOf(top);
 
+    if (i > -1) {
+      if (!isValOnly) {
+        return ('symbol: ' + data[i]['symbol'] + ' name: ' + data[i]['name'] + ': ' + top);
+      } else {
+        return top;
+      }
+    }
 
   }
-  
-  getTop10Vol(data){
-    let top10Vol = [];
+
+  getTop10Vol(data) {
+    const top10Vol = [];
     this.d = data;
-    let $this = this;
+    const $this = this;
     data.forEach(coin => {
-        let top = $this.getTopCoin($this.d, '24h_volume_usd', 'max', true);
-        top10Vol.push(top);
-        $this.d = $this.arrayRemove($this.d, top);
+      const top = $this.getTopCoin($this.d, '24h_volume_usd', 'max', true);
+      top10Vol.push(top);
+      $this.d = $this.arrayRemove($this.d, top);
     });
 
     console.log(top10Vol);
   }
 
-  equate(data, val, field){
+  equate(data, val, field) {
     return data.field === val;
   }
 
   arrayRemove(obj, val) {
-      console.log(obj.find(this.equate(obj,val,'24h_volume_usd'))) ;
-      let i = -1;
-      if (i >= 0) {
-        delete obj.i; 
-        return obj.splice( i, 1 );
-      }
+    console.log(obj.find(this.equate(obj, val, '24h_volume_usd')));
+    const i = -1;
+    if (i >= 0) {
+      delete obj.i;
+      return obj.splice(i, 1);
+    }
   }
 }
