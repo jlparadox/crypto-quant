@@ -1,5 +1,9 @@
 import {Component, OnInit} from '@angular/core';
-import {MessagingService} from './messaging.service';
+
+import {MessagingService} from './core/messaging.service';
+import {AuthService} from './core/auth.service';
+import 'rxjs/add/operator/take';
+import 'rxjs/add/operator/filter';
 
 import {CoinMarketService} from './coinmarket/coinmarket.service';
 import {CryptoCompareService} from './cryptocompare/cryptocompare.service';
@@ -35,9 +39,8 @@ export class AppComponent implements OnInit {
   constructor(private coinservice: CoinMarketService,
               private cryptocompare: CryptoCompareService,
               private localStorageService: LocalStorageService,
-              private db: AngularFirestore,
-              private msgService: MessagingService) {
-    this.items = db.collection('watchlist').valueChanges();
+              public msg: MessagingService,
+              public auth: AuthService) {
     this.items.subscribe(items => {
       for (const item of items) {
         console.log(item.name);
@@ -47,7 +50,18 @@ export class AppComponent implements OnInit {
 
   ngOnInit() {
     const $this = this;
-    this.getPushNotifications();
+
+    this.auth.user
+      .filter(user => !!user) 
+      .take(1) 
+      .subscribe(user => {
+        if (user) {
+          this.msg.getPermission(user)
+          this.msg.monitorRefresh(user)
+          this.msg.receiveMessages()
+        }
+      })
+
     this.coinservice.getCoinData(this.limit).subscribe(
       data => {
         this.Top24h = this.getTopCoin(data, 'percent_change_24h', 'max');
@@ -67,12 +81,6 @@ export class AppComponent implements OnInit {
         console.log(err);
       }
     );
-  }
-
-  getPushNotifications() {
-    this.msgService.getPermission();
-    this.msgService.receiveMessage();
-    this.message = this.msgService.currentMessage;
   }
 
   getHistoData(coin) {

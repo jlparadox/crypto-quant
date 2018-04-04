@@ -3,30 +3,30 @@ import {NgModule} from '@angular/core';
 import {HttpModule} from '@angular/http';
 
 import {AppComponent} from './app.component';
+import {MessagingService} from './core/messaging.service';
 
 import {CoinMarketModule} from './coinmarket/coinmarket.module';
 import {CryptoCompareModule} from './cryptocompare/cryptocompare.module';
+import {CoreModule} from './core/core.module';
 import {LocalStorageModule} from 'angular-2-local-storage';
 import {WatchListFormComponent} from './watch-list-form/watch-list-form.component';
 import {ExceptionFormComponent} from './exception-form/exception-form.component';
-import {AngularFireModule} from 'angularfire2';
-import {AngularFirestoreModule} from 'angularfire2/firestore';
-import {AngularFireStorageModule} from 'angularfire2/storage';
-import {AngularFireAuthModule} from 'angularfire2/auth';
 import {environment} from '../environments/environment';
+
+import {AngularFireModule} from 'angularfire2';
+import { UserProfileComponent } from './user-profile/user-profile.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     WatchListFormComponent,
-    ExceptionFormComponent
+    ExceptionFormComponent,
+    UserProfileComponent,
   ],
   imports: [
     BrowserModule,
     AngularFireModule.initializeApp(environment.firebase),
-    AngularFirestoreModule,
-    AngularFireAuthModule,
-    AngularFireStorageModule,
+    CoreModule,
     HttpModule,
     CoinMarketModule,
     CryptoCompareModule,
@@ -36,7 +36,7 @@ import {environment} from '../environments/environment';
     })
 
   ],
-  providers: [AppComponent],
+  providers: [AppComponent, MessagingService],
   bootstrap: [AppComponent]
 })
 export class AppModule {
