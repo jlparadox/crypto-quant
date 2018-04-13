@@ -52,15 +52,15 @@ export class AppComponent implements OnInit {
     const $this = this;
 
     this.auth.user
-      .filter(user => !!user) 
-      .take(1) 
+      .filter(user => !!user)
+      .take(1)
       .subscribe(user => {
         if (user) {
-          this.msg.getPermission(user)
-          this.msg.monitorRefresh(user)
-          this.msg.receiveMessages()
+          this.msg.getPermission(user);
+          this.msg.monitorRefresh(user);
+          this.msg.receiveMessages();
         }
-      })
+      });
 
     this.coinservice.getCoinData(this.limit).subscribe(
       data => {
