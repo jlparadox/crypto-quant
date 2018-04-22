@@ -41,11 +41,11 @@ export class AppComponent implements OnInit {
               private localStorageService: LocalStorageService,
               public msg: MessagingService,
               public auth: AuthService) {
-    this.items.subscribe(items => {
-      for (const item of items) {
-        console.log(item.name);
-      }
-    });
+    // this.items.subscribe(items => {
+    //   for (const item of items) {
+    //     console.log(item.name);
+    //   }
+    // });
   }
 
   ngOnInit() {

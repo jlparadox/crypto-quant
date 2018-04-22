@@ -2,31 +2,31 @@ import {NgModule} from '@angular/core';
 
 import {CoinMarketService} from './coinmarket.service';
 
-import { BrowserModule  } from '@angular/platform-browser';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-import { HttpModule } from '@angular/http';
+import {BrowserModule} from '@angular/platform-browser';
+import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
+import {HttpModule} from '@angular/http';
 
 @NgModule({
-    imports: [
-    	// Modules
-      HttpModule,
-      BrowserModule,
+  imports: [
+    // Modules
+    HttpModule,
+    BrowserModule,
 
-    ],
-    providers: [
-    	// Services
-        CoinMarketService
-    ],
-    declarations: [
-    	// Controllers
+  ],
+  providers: [
+    // Services
+    CoinMarketService
+  ],
+  declarations: [
+    // Controllers
 
-    	// Components
-    ],
-    exports: [
-    	// Controllers
+    // Components
+  ],
+  exports: [
+    // Controllers
 
-    	// Components
-    ]
+    // Components
+  ]
 })
 export class CoinMarketModule {
 

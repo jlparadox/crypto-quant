@@ -14,7 +14,13 @@ import {ExceptionFormComponent} from './exception-form/exception-form.component'
 import {environment} from '../environments/environment';
 
 import {AngularFireModule} from 'angularfire2';
-import { UserProfileComponent } from './user-profile/user-profile.component';
+import {UserProfileComponent} from './user-profile/user-profile.component';
+import {Routes, RouterModule} from '@angular/router';
+import {AuthGuard} from './core/auth.guard';
+
+const routes: Routes = [
+  { path: 'notes', component: AppComponent,  canActivate: [AuthGuard] },
+];
 
 @NgModule({
   declarations: [
@@ -33,8 +39,8 @@ import { UserProfileComponent } from './user-profile/user-profile.component';
     LocalStorageModule.withConfig({
       prefix: 'my-app',
       storageType: 'localStorage'
-    })
-
+    }),
+    RouterModule.forRoot(routes, {useHash: true}),
   ],
   providers: [AppComponent, MessagingService],
   bootstrap: [AppComponent]
