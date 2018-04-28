@@ -12,5 +12,7 @@ export const environment = {
     projectId: 'crypto-quant',
     storageBucket: 'crypto-quant.appspot.com',
     messagingSenderId: '733155364394'
-  }
+  },
+  baseDiscordUrl: 'https://discordapp.com/api/webhooks/',
+  discordId: '439629504030310401/EIEyHOoN9vX0-vF3LhvZNYk34vl2dwHJn0_uT3T6u8NPRhTZnkzYzkwsNofwb6s1Cc0A',
 };

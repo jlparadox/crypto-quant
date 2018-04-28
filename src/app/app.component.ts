@@ -1,6 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 
 import {MessagingService} from './core/messaging.service';
+import {HttpClient} from '@angular/common/http';
 import {AuthService} from './core/auth.service';
 import 'rxjs/add/operator/take';
 import 'rxjs/add/operator/filter';
@@ -8,8 +9,10 @@ import 'rxjs/add/operator/filter';
 import {CoinMarketService} from './coinmarket/coinmarket.service';
 import {CryptoCompareService} from './cryptocompare/cryptocompare.service';
 import {LocalStorageService} from 'angular-2-local-storage';
+import {DiscordService} from './discord/discord.service';
 import {AngularFirestore} from 'angularfire2/firestore';
 import {Observable} from 'rxjs/Observable';
+import {environment} from '../environments/environment';
 
 import * as tfy from 'taffy';
 
@@ -39,6 +42,7 @@ export class AppComponent implements OnInit {
   constructor(private coinservice: CoinMarketService,
               private cryptocompare: CryptoCompareService,
               private localStorageService: LocalStorageService,
+              private discordService: DiscordService,
               public msg: MessagingService,
               public auth: AuthService) {
     // this.items.subscribe(items => {
@@ -61,6 +65,8 @@ export class AppComponent implements OnInit {
           this.msg.receiveMessages();
         }
       });
+
+    this.discordService.send_to_discord('Discord service');
 
     this.coinservice.getCoinData(this.limit).subscribe(
       data => {

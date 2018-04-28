@@ -1,21 +1,24 @@
 import {BrowserModule} from '@angular/platform-browser';
 import {NgModule} from '@angular/core';
 import {HttpModule} from '@angular/http';
+import {HttpClientModule} from '@angular/common/http';
+import {CoinMarketModule} from './coinmarket/coinmarket.module';
+import {CryptoCompareModule} from './cryptocompare/cryptocompare.module';
+import {DiscordModule} from './discord/discord.module';
+import {CoreModule} from './core/core.module';
+import {LocalStorageModule} from 'angular-2-local-storage';
+import {AngularFireModule} from 'angularfire2';
+import {Routes, RouterModule} from '@angular/router';
 
 import {AppComponent} from './app.component';
 import {MessagingService} from './core/messaging.service';
-
-import {CoinMarketModule} from './coinmarket/coinmarket.module';
-import {CryptoCompareModule} from './cryptocompare/cryptocompare.module';
-import {CoreModule} from './core/core.module';
-import {LocalStorageModule} from 'angular-2-local-storage';
 import {WatchListFormComponent} from './watch-list-form/watch-list-form.component';
 import {ExceptionFormComponent} from './exception-form/exception-form.component';
 import {environment} from '../environments/environment';
 
-import {AngularFireModule} from 'angularfire2';
+
 import {UserProfileComponent} from './user-profile/user-profile.component';
-import {Routes, RouterModule} from '@angular/router';
+
 import {AuthGuard} from './core/auth.guard';
 
 const routes: Routes = [
@@ -34,8 +37,10 @@ const routes: Routes = [
     AngularFireModule.initializeApp(environment.firebase),
     CoreModule,
     HttpModule,
+    HttpClientModule,
     CoinMarketModule,
     CryptoCompareModule,
+    DiscordModule,
     LocalStorageModule.withConfig({
       prefix: 'my-app',
       storageType: 'localStorage'
