@@ -16,4 +16,11 @@ export class CryptoCompareService {
         .map(res => res.json());
                   
     }
+
+    getExchangeData(){
+        return this.http.get('https://min-api.cryptocompare.com/data/all/exchanges')
+        .map(res => res.json());
+    }
+
+    
 }

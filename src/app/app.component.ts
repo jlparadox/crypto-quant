@@ -68,6 +68,8 @@ export class AppComponent implements OnInit {
 
     this.discordService.send_to_discord('Discord service');
 
+    this.getBinancePairs();
+
     this.coinservice.getCoinData(this.limit).subscribe(
       data => {
         this.Top24h = this.getTopCoin(data, 'percent_change_24h', 'max');
@@ -87,6 +89,18 @@ export class AppComponent implements OnInit {
         console.log(err);
       }
     );
+  }
+
+  getBinancePairs(){
+    const $this = this;
+    this.cryptocompare.getExchangeData().subscribe(
+        data => {
+          console.log(data['Binance']);
+        },
+        err => {
+          console.log(err);
+        }
+      );
   }
 
   getHistoData(coin) {
