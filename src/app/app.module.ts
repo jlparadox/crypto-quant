@@ -22,6 +22,7 @@ import {environment} from '../environments/environment';
 import {UserProfileComponent} from './user-profile/user-profile.component';
 
 import {AuthGuard} from './core/auth.guard';
+import { PortfolioFormComponent } from './portfolio-form/portfolio-form.component';
 
 const routes: Routes = [
   {path: 'notes', component: AppComponent, canActivate: [AuthGuard]},
@@ -33,6 +34,7 @@ const routes: Routes = [
     WatchListFormComponent,
     ExceptionFormComponent,
     UserProfileComponent,
+    PortfolioFormComponent,
   ],
   imports: [
     BrowserModule,
