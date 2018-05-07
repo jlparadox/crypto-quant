@@ -1,3 +1,16 @@
-<p>
-  portfolio-form works!
-</p>
+div class="container">
+<h1>Portfolio</h1>
+<ul>
+  <li class="text" *ngFor="let item of portfolio | async">
+    {{item.symbol}} <button class="btn btn-success" (dblclick)="onDelete(item.symbol)">Delete</button>
+  </li>
+</ul>
+<form (ngSubmit)="onSubmit()" #watchlistForm="ngForm">
+  <div class="form-group">
+    <label>Add to Watchlist</label>
+    <input type="text" class="form-control" id="symbol" [(ngModel)]="portfolioEntry" [ngModelOptions]="{standalone: true}" required>
+  </div>
+
+  <button type="submit" class="btn btn-success">Submit</button>
+
+</form>

@@ -24,18 +24,8 @@ import * as tfy from 'taffy';
 })
 export class AppComponent implements OnInit {
   title = 'Crypto Quant';
-  private limit = 100;
   private coinData;
-  private Top7Day;
-  private Top24h;
-  private Top1H;
-  private TopVol;
-  private lastUpdated;
-  Last7Day;
-  Last24h;
-  Last1H;
   private volBuzz = [];
-  private d;
   vol_buzz: Observable<any[]>;
   message;
 
@@ -65,34 +55,30 @@ export class AppComponent implements OnInit {
 
     this.discordService.send_to_discord('Discord service');
 
-    this.getBinancePairs();
+    if (this.localStorageService.get('binance_data')) {
+      this.initializeApp();
+    } else {
+      this.getBinancePairs();
+    }
 
-    this.coinservice.getCoinData(this.limit).subscribe(
-      data => {
-        this.Top24h = this.getTopCoin(data, 'percent_change_24h', 'max');
-        this.Top7Day = this.getTopCoin(data, 'percent_change_7d', 'max');
-        this.Top1H = this.getTopCoin(data, 'percent_change_1h', 'max');
-        this.TopVol = this.getTopCoin(data, '24h_volume_usd', 'max');
-        this.Last24h = this.getTopCoin(data, 'percent_change_24h', 'min');
-        this.Last7Day = this.getTopCoin(data, 'percent_change_7d', 'min');
-        this.Last1H = this.getTopCoin(data, 'percent_change_1h', 'min');
-        this.lastUpdated = this.getUpdatedDate(data);
+  }
 
-        data.forEach(coin => {
-          $this.getVolumeBuzz(coin);
-        });
-      },
-      err => {
-        console.log(err);
-      }
-    );
+  initializeApp() {
+    const $this = this;
+    const dataBinance = this.localStorageService.get('binance_data');
+    const coins = Object.keys(dataBinance);
+    coins.forEach(coin => {
+      this.getVolumeBuzz(coin);
+    });
   }
 
   getBinancePairs() {
     const $this = this;
     this.cryptocompare.getExchangeData().subscribe(
       data => {
-        console.log(data['Binance']);
+        console.log('updated binance data: ', data['Binance']);
+        this.localStorageService.set('binance_data', data['Binance']);
+        this.initializeApp();
       },
       err => {
         console.log(err);
@@ -185,13 +171,6 @@ export class AppComponent implements OnInit {
 
   }
 
-  getUpdatedDate(data) {
-    data.forEach(coin => {
-      const d = new Date();
-      d.setDate(coin['last_updated']);
-    });
-  }
-
   formatDate(date) {
     const today = new Date();
     const dd = today.getDate();
@@ -201,55 +180,4 @@ export class AppComponent implements OnInit {
     return mm + '/' + dd + '/' + yyyy;
   }
 
-  getTopCoin(data, field, param, isValOnly = false) {
-    const coinsChange = [];
-    data.forEach(coin => {
-      coinsChange.push(Math.round(coin[field]));
-    });
-
-    const top = coinsChange.reduce(function (a, b) {
-      if (param === 'max') {
-        return Math.max(a, b);
-      } else {
-        return Math.min(a, b);
-      }
-    });
-
-    const i = coinsChange.indexOf(top);
-
-    if (i > -1) {
-      if (!isValOnly) {
-        return ('symbol: ' + data[i]['symbol'] + ' name: ' + data[i]['name'] + ': ' + top);
-      } else {
-        return top;
-      }
-    }
-
-  }
-
-  getTop10Vol(data) {
-    const top10Vol = [];
-    this.d = data;
-    const $this = this;
-    data.forEach(coin => {
-      const top = $this.getTopCoin($this.d, '24h_volume_usd', 'max', true);
-      top10Vol.push(top);
-      $this.d = $this.arrayRemove($this.d, top);
-    });
-
-    console.log(top10Vol);
-  }
-
-  equate(data, val, field) {
-    return data.field === val;
-  }
-
-  arrayRemove(obj, val) {
-    console.log(obj.find(this.equate(obj, val, '24h_volume_usd')));
-    const i = -1;
-    if (i >= 0) {
-      delete obj.i;
-      return obj.splice(i, 1);
-    }
-  }
 }
