@@ -9,6 +9,8 @@ import {CoreModule} from './core/core.module';
 import {LocalStorageModule} from 'angular-2-local-storage';
 import {AngularFireModule} from 'angularfire2';
 import {Routes, RouterModule} from '@angular/router';
+import {FormsModule} from '@angular/forms';
+import {ReactiveFormsModule} from '@angular/forms';
 
 import {AppComponent} from './app.component';
 import {MessagingService} from './core/messaging.service';
@@ -22,7 +24,7 @@ import {UserProfileComponent} from './user-profile/user-profile.component';
 import {AuthGuard} from './core/auth.guard';
 
 const routes: Routes = [
-  { path: 'notes', component: AppComponent,  canActivate: [AuthGuard] },
+  {path: 'notes', component: AppComponent, canActivate: [AuthGuard]},
 ];
 
 @NgModule({
@@ -38,6 +40,8 @@ const routes: Routes = [
     CoreModule,
     HttpModule,
     HttpClientModule,
+    ReactiveFormsModule,
+    FormsModule,
     CoinMarketModule,
     CryptoCompareModule,
     DiscordModule,

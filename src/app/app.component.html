@@ -6,12 +6,12 @@
   <img width="300" alt="Angular Logo" src="https://icoinmarket.com/images/cryptocurrency.png">
 </div>
 <h2>A summary of crypto market data </h2>
-
+<app-user-profile></app-user-profile>
 <app-watch-list-form></app-watch-list-form>
 <h2>Top Losers: </h2>
 {{ message | async | json }}
 <ul>
-  <li class="text" *ngFor="let item of items | async">
+  <li class="text" *ngFor="let item of vol_buzz | async">
     {{item.name}}{{item.symbol}}
   </li>
 </ul>
@@ -26,4 +26,4 @@
     <h3>Last Gainer 1 hrs:</h3>{{ Last1H }}
   </li>
 </ul>
-<app-user-profile></app-user-profile>
+

@@ -1,12 +1,16 @@
-<div class="container">
-  <h1>Watchlist</h1>
-  <form>
-    <div class="form-group">
-      <label for="name">Symbol</label>
-      <input type="text" class="form-control" id="symbol" required>
-    </div>
+div class="container">
+<h1>Watchlist</h1>
+<ul>
+  <li class="text" *ngFor="let item of watchlist | async">
+    {{item.symbol}} <button class="btn btn-success" (dblclick)="onDelete(item.symbol)">Delete</button>
+  </li>
+</ul>
+<form (ngSubmit)="onSubmit()" #watchlistForm="ngForm">
+  <div class="form-group">
+    <label>Add to Watchlist</label>
+    <input type="text" class="form-control" id="symbol" [(ngModel)]="watchlistEntry" [ngModelOptions]="{standalone: true}" required>
+  </div>
 
-    <button type="submit" class="btn btn-success">Submit</button>
+  <button type="submit" class="btn btn-success">Submit</button>
 
-  </form>
-</div>
+</form>

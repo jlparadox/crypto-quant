@@ -36,7 +36,7 @@ export class AppComponent implements OnInit {
   Last1H;
   private volBuzz = [];
   private d;
-  items: Observable<any[]>;
+  vol_buzz: Observable<any[]>;
   message;
 
   constructor(private coinservice: CoinMarketService,
@@ -44,12 +44,9 @@ export class AppComponent implements OnInit {
               private localStorageService: LocalStorageService,
               private discordService: DiscordService,
               public msg: MessagingService,
+              private db: AngularFirestore,
               public auth: AuthService) {
-    // this.items.subscribe(items => {
-    //   for (const item of items) {
-    //     console.log(item.name);
-    //   }
-    // });
+    this.vol_buzz = db.collection('/volume_buzz').valueChanges();
   }
 
   ngOnInit() {
@@ -65,8 +62,6 @@ export class AppComponent implements OnInit {
           this.msg.receiveMessages();
         }
       });
-
-    this.discordService.send_to_discord('Discord service');
 
     this.coinservice.getCoinData(this.limit).subscribe(
       data => {
@@ -133,19 +128,40 @@ export class AppComponent implements OnInit {
   getVolumeBuzz(coin, increase = 50) {
     const $this = this;
     let buzz;
-    this.volBuzz = $this.localStorageService.get('volume_buzz');
 
     this.getHistoData(coin).subscribe(histo => {
       const ave = $this.getAveVolumeChange(histo);
       $this.getCurrentVolumeChange(histo).then(current => {
         const percentIncrease = (Number(current) - ave) / ave * 100;
+        const buzzDate = this.formatDate(new Date());
+        // check if buzz is already recorded
         if (percentIncrease > increase) {
-          buzz = this.formatDate(new Date()) + ': ' + coin['symbol'] + ': ' + percentIncrease + '% ';
-          if (this.volBuzz.indexOf(buzz) < -1) {
-            console.log('buzz!:', buzz);
-            $this.volBuzz.push(buzz);
-            $this.localStorageService.set('volume_buzz', $this.volBuzz);
-          }
+          this.vol_buzz.subscribe(
+            (buzzes) => {
+
+              buzzes.forEach(function (buzzItem) {
+                if (buzzItem['symbol'] !== 'SYS' && buzzItem['date'] !== buzzDate) {
+                  buzz = buzzDate + ': ' + coin['symbol'] + ': ' + Math.ceil(percentIncrease) + '% ';
+                  // Add a new document in collection "cities"
+                  $this.db.collection('/volume_buzz').doc(coin['symbol']).set({
+                    name: coin['name'],
+                    symbol: coin['symbol'],
+                    percent: Math.ceil(percentIncrease),
+                    date: buzzDate
+                  })
+                    .then(function () {
+                      console.log('buzz saved: ', buzz);
+                    })
+                    .catch(function (error) {
+                      console.error('Error writing document: ', error);
+                    });
+                  $this.discordService.send_to_discord('Yo, Volume buzz!: ' + 'crypto: ' + coin['name']
+                    + ' symbol: ' + coin['symbol'] + ' at ' + Math.ceil(percentIncrease) + '% ');
+                }
+
+              });
+
+            });
         }
       });
 
