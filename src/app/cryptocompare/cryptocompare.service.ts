@@ -12,6 +12,7 @@ export class CryptoCompareService {
   }
 
   getHistoData(symA, symB = 'BTC', limit = 10, exchange = 'Binance') {
+    symB = symA === 'BTC' ? 'USD' : symB;
     return this.http.get('https://min-api.cryptocompare.com/data/histoday?fsym='
       + symA + '&tsym=' + symB + '&limit=' + limit + '&aggregate=5&e=' + exchange)
       .map(res => res.json());

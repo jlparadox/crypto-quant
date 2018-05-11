@@ -53,8 +53,6 @@ export class AppComponent implements OnInit {
         }
       });
 
-    this.discordService.send_to_discord('Discord service');
-
     if (this.localStorageService.get('binance_data')) {
       this.initializeApp();
     } else {
@@ -70,13 +68,33 @@ export class AppComponent implements OnInit {
     coins.forEach(coin => {
       this.getVolumeBuzz(coin);
     });
+    this.filterByWatchList();
+    this.filterByPortfolio();
+  }
+
+  filterByWatchList() {
+    const $this = this;
+    const watchlist = this.db.collection('/watchlist').valueChanges();
+    watchlist.subscribe((list) => {
+      list.forEach(function (watchItem) {
+        $this.getAbsMomentum(watchItem);
+      });
+    });
+  }
+
+  filterByPortfolio() {
+    const portfolio = this.db.collection('/portfolio').valueChanges();
+    portfolio.subscribe((list) => {
+      list.forEach(function (item) {
+        // apply your functions here
+        // console.log('test: ', item);
+      });
+    });
   }
 
   getBinancePairs() {
-    const $this = this;
     this.cryptocompare.getExchangeData().subscribe(
       data => {
-        console.log('updated binance data: ', data['Binance']);
         this.localStorageService.set('binance_data', data['Binance']);
         this.initializeApp();
       },
@@ -84,12 +102,6 @@ export class AppComponent implements OnInit {
         console.log(err);
       }
     );
-  }
-
-  getHistoData(coin) {
-    const s = coin['symbol'];
-
-    return this.cryptocompare.getHistoData(s);
   }
 
   getAveVolumeChange(volSrc) {
@@ -108,7 +120,6 @@ export class AppComponent implements OnInit {
   }
 
   getCurrentVolumeChange(volSrc) {
-    const $this = this;
     let curDate;
     return new Promise((resolve, reject) => {
       if (volSrc['Response'] === 'Success') {
@@ -127,11 +138,35 @@ export class AppComponent implements OnInit {
     });
   }
 
+  getAbsMomentum(coin, days = 10, increase = 100) {
+    const $this = this;
+    this.cryptocompare.getHistoData(coin.symbol, 'BTC', days).subscribe(histo => {
+      if (histo['Response'] === 'Success') {
+        console.log('histo', histo);
+        const rc = this.getRateOfChange(histo['Data'][0]['close'], histo['Data'][days - 1]['close']);
+        const bil = this.cryptocompare.getHistoData('BTC', 'USD', days);
+        bil.subscribe(btc => {
+          console.log('btc', btc);
+          const bilr = $this.getRateOfChange(btc[0]['close'], btc['Data'][days - 1]['close']);
+          const absoluteMomentum = rc - bilr;
+          if (absoluteMomentum > increase) {
+            $this.discordService.send_to_discord(
+              'Yo, High Momentum!: ' + 'crypto: ' + coin + ' at ' + Math.ceil(absoluteMomentum) + '% ');
+          } // const smAbsoluteMomemntum = sma(rcdm,sm) // returns the moving average ((rcdm + sm) / sm)
+        });
+      }
+    });
+  }
+
+  getRateOfChange(o, n) {
+    return (n / o) * 100;
+  }
+
   getVolumeBuzz(coin, increase = 50) {
     const $this = this;
     let buzz;
 
-    this.getHistoData(coin).subscribe(histo => {
+    this.cryptocompare.getHistoData(coin).subscribe(histo => {
       const ave = $this.getAveVolumeChange(histo);
       $this.getCurrentVolumeChange(histo).then(current => {
         const percentIncrease = (Number(current) - ave) / ave * 100;
@@ -140,14 +175,13 @@ export class AppComponent implements OnInit {
         if (percentIncrease > increase) {
           this.vol_buzz.subscribe(
             (buzzes) => {
-
               buzzes.forEach(function (buzzItem) {
-                if (buzzItem['symbol'] !== 'SYS' && buzzItem['date'] !== buzzDate) {
+                if (buzzItem['symbol'] !== buzz && buzzItem['date'] !== buzzDate) {
                   buzz = buzzDate + ': ' + coin['symbol'] + ': ' + Math.ceil(percentIncrease) + '% ';
                   // Add a new document in collection "cities"
-                  $this.db.collection('/volume_buzz').doc(coin['symbol']).set({
-                    name: coin['name'],
-                    symbol: coin['symbol'],
+                  $this.db.collection('/volume_buzz').doc(coin).set({
+                    name: coin,
+                    symbol: coin,
                     percent: Math.ceil(percentIncrease),
                     date: buzzDate
                   })
@@ -157,8 +191,8 @@ export class AppComponent implements OnInit {
                     .catch(function (error) {
                       console.error('Error writing document: ', error);
                     });
-                  $this.discordService.send_to_discord('Yo, Volume buzz!: ' + 'crypto: ' + coin['name']
-                    + ' symbol: ' + coin['symbol'] + ' at ' + Math.ceil(percentIncrease) + '% ');
+                  $this.discordService.send_to_discord(
+                    'Yo, Volume buzz!: ' + 'crypto: ' + coin + ' at ' + Math.ceil(percentIncrease) + '% ');
                 }
 
               });
