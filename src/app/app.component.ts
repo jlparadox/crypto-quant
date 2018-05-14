@@ -104,16 +104,16 @@ export class AppComponent implements OnInit {
     );
   }
 
-  getAveVolumeChange(volSrc) {
-    const aggregateVol = [];
+  getAverageValue(dataSrc) {
+    const aggregate = [];
 
-    if (volSrc['Response'] === 'Success') {
-      volSrc['Data'].forEach(src => {
-        aggregateVol.push(src['volumeto']);
+    if (dataSrc['Response'] === 'Success') {
+      dataSrc['Data'].forEach(src => {
+        aggregate.push(src['volumeto']);
       });
-      if (aggregateVol.length > 0) {
-        const sum = aggregateVol.reduce((previous, current) => current += previous);
-        return (sum / aggregateVol.length);
+      if (aggregate.length > 0) {
+        const sum = aggregate.reduce((previous, current) => current += previous);
+        return (sum / aggregate.length);
       }
     }
 
@@ -138,16 +138,14 @@ export class AppComponent implements OnInit {
     });
   }
 
-  getAbsMomentum(coin, days = 10, increase = 100) {
+  getAbsMomentum(coin, days = 15, increase = 100) {
     const $this = this;
     this.cryptocompare.getHistoData(coin.symbol, 'BTC', days).subscribe(histo => {
       if (histo['Response'] === 'Success') {
-        console.log('histo', histo);
         const rc = this.getRateOfChange(histo['Data'][0]['close'], histo['Data'][days - 1]['close']);
-        const bil = this.cryptocompare.getHistoData('BTC', 'USD', days);
+        const bil = this.cryptocompare.getHistoData('BTC', 'USDT', days);
         bil.subscribe(btc => {
-          console.log('btc', btc);
-          const bilr = $this.getRateOfChange(btc[0]['close'], btc['Data'][days - 1]['close']);
+          const bilr = $this.getRateOfChange(btc['Data'][0]['close'], btc['Data'][days - 1]['close']);
           const absoluteMomentum = rc - bilr;
           if (absoluteMomentum > increase) {
             $this.discordService.send_to_discord(
@@ -158,6 +156,57 @@ export class AppComponent implements OnInit {
     });
   }
 
+  getTrendIntensity(coin, days=20, increase = 100){
+    const $this = this;
+    this.cryptocompare.getHistoData(coin.symbol, 'BTC', days).subscribe(histo => {
+      if (histo['Response'] === 'Success') {
+        const sma = this.getAverageValue(histo);
+        let iter = 0;
+        let item;
+        const posDev = [];
+        const negDev = [];
+        for(item of histo['Data']){
+          let dev =  item['close'] - sma;
+          dev > 0 ? posDev.push(dev) : negDev.push(Math.abs(dev));
+          if(iter > days/2)
+            break;
+          else
+            iter++;
+        }
+        const sdPos = posDev.reduce((previous, current) => current += previous);
+        const sdNeg = negDev.reduce((previous, current) => current += previous);
+        return (((sdPos) / (sdPos + sdNeg)) * 100);
+      }
+    });
+  }
+
+  getRelativeMomentum(coin, days=20, mom=4, ob=70, os=30){
+    const $this = this;
+    this.cryptocompare.getHistoData(coin.symbol, 'BTC', days).subscribe(histo => {
+      const up = $this.getEma(histo, true);
+      const dn = $this.getEma(histo, false);
+      const rmi = dn == 0 ? 0 : 100 - 100 / (1 + up / dn)
+    });
+  }
+
+  getEma(dataSrc, indicator){
+    const aggregate = [];
+    if (dataSrc['Response'] === 'Success') {
+      for (let i = dataSrc['Data'].length; i > 0; i--) {
+        let multiplier =  (2 / (i + 1) )
+        if (indicator)
+          aggregate.push((dataSrc['high']  * multiplier));
+        else
+        aggregate.push((dataSrc['low']  * multiplier));
+      };
+      if (aggregate.length > 0) {
+        const sum = aggregate.reduce((previous, current) => current += previous);
+        return (sum / aggregate.length);
+      }
+    }
+  }
+
+
   getRateOfChange(o, n) {
     return (n / o) * 100;
   }
@@ -167,7 +216,7 @@ export class AppComponent implements OnInit {
     let buzz;
 
     this.cryptocompare.getHistoData(coin).subscribe(histo => {
-      const ave = $this.getAveVolumeChange(histo);
+      const ave = $this.getAverageValue(histo);
       $this.getCurrentVolumeChange(histo).then(current => {
         const percentIncrease = (Number(current) - ave) / ave * 100;
         const buzzDate = this.formatDate(new Date());
