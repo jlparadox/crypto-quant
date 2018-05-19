@@ -23,6 +23,7 @@ import {UserProfileComponent} from './user-profile/user-profile.component';
 
 import {AuthGuard} from './core/auth.guard';
 import { PortfolioFormComponent } from './portfolio-form/portfolio-form.component';
+import { QuantService } from './quant/quant.service';
 
 const routes: Routes = [
   {path: 'notes', component: AppComponent, canActivate: [AuthGuard]},
@@ -53,7 +54,7 @@ const routes: Routes = [
     }),
     RouterModule.forRoot(routes, {useHash: true}),
   ],
-  providers: [AppComponent, MessagingService],
+  providers: [AppComponent, MessagingService, QuantService],
   bootstrap: [AppComponent]
 })
 export class AppModule {
