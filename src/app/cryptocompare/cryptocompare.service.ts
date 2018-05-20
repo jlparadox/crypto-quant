@@ -23,5 +23,10 @@ export class CryptoCompareService {
       .map(res => res.json());
   }
 
+  getStreamData(list){
+    return this.http.get('https://min-api.cryptocompare.com/data/subsWatchlist?fsyms='
+    + list + '&tsym=USD');
+  }
+
 
 }

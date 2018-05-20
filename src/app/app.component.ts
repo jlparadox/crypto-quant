@@ -74,11 +74,17 @@ export class AppComponent implements OnInit {
 
   filterByWatchList() {
     const $this = this;
+    let listString = '';
     const watchlist = this.db.collection('/watchlist').valueChanges();
     watchlist.subscribe((list) => {
       list.forEach(function (watchItem) {
+        listString += listString == '' ? watchItem['symbol'] : ',' + watchItem['symbol'];
+        $this.quantService.setFibonacci(watchItem);
         $this.quantService.getAbsMomentum(watchItem);
       });
+      // this.cryptocompare.getStreamData(listString).subscribe(stream => {
+      //     console.log(stream['_body']);
+      // });
     });
   }
 

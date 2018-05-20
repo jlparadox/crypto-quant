@@ -20,6 +20,7 @@ export class QuantService {
   private coinData;
   private volBuzz = [];
   vol_buzz: Observable<any[]>;
+  current_fibo: Observable<any[]>;
   message;
 
   constructor(private coinservice: CoinMarketService,
@@ -30,6 +31,7 @@ export class QuantService {
               private db: AngularFirestore,
               public auth: AuthService) {
     this.vol_buzz = db.collection('/volume_buzz').valueChanges();
+    this.current_fibo = db.collection('/current_fibo_level').valueChanges();
   }
 
 
@@ -73,11 +75,46 @@ export class QuantService {
       });
 
     });
-
   }
 
-  getFibonacci(hi, lo){
-    
+  setFibonacci(coin, days=30){
+    const $this = this;
+    let setFibo = true;
+    this.cryptocompare.getHistoData(coin.symbol, 'BTC', days).subscribe(histo => {
+      const hi = $this.getMaxOrMin(histo, true);
+      const lo =  $this.getMaxOrMin(histo, false);
+      const dist = hi - lo;
+      const currentFibo = $this.db.collection('/current_fibo_level').doc(coin.symbol);
+      if(currentFibo){
+        if(hi > currentFibo['high'] || lo < currentFibo['low']){
+          setFibo = true;
+        } else{
+          setFibo = false;
+        }
+      }
+      if(setFibo){
+        $this.db.collection('/current_fibo_level').doc(coin.symbol).set({
+          high: hi,
+          low: lo,
+          fib23: dist * 0.236,
+          fib38: dist * 0.236,
+          fib50: dist * 0.50,
+          fib61: dist * 0.618,
+          fib78: dist * 0.786,
+          last_updated: this.formatDate(new Date()), 
+        })
+        .then(function () {
+          console.log('fibonacci retracement set: ', coin.symbol);
+        })
+        .catch(function (error) {
+          console.error('Error writing document: ', error);
+        });
+      }
+    });
+  }
+
+  getFibonacci(coin){
+    const fibo = this.db.collection('/current_fibo_level').valueChanges();
   }
 
   getAbsMomentum(coin, days = 15, increase = 100) {
@@ -90,8 +127,9 @@ export class QuantService {
           const bilr = $this.getRateOfChange(btc['Data'][0]['close'], btc['Data'][days - 1]['close']);
           const absoluteMomentum = rc - bilr;
           if (absoluteMomentum > increase) {
+            console.log('Yo, High Momentum!: ' + coin.symbol + ' at ' + Math.ceil(absoluteMomentum) + '% ');
             $this.discordService.send_to_discord(
-              'Yo, High Momentum!: ' + 'crypto: ' + coin + ' at ' + Math.ceil(absoluteMomentum) + '% ');
+              'Yo, High Momentum!: ' + 'crypto: ' + coin.symbol + ' at ' + Math.ceil(absoluteMomentum) + '% ');
           } // const smAbsoluteMomemntum = sma(rcdm,sm) // returns the moving average ((rcdm + sm) / sm)
         });
       }
@@ -196,6 +234,21 @@ export class QuantService {
 
   getRateOfChange(o, n) {
     return (n / o) * 100;
+  }
+
+  getMaxOrMin(dataSrc, isMax){
+    const aggregate = [];
+    if (dataSrc['Response'] === 'Success') {
+      dataSrc['Data'].forEach(src => {
+        aggregate.push(src['high']);
+      });
+      if (aggregate.length > 0) {
+        const minmax = aggregate.reduce((previous, current) => {
+            return (isMax ? Math.max(previous, current) : Math.min(previous, current));
+        });
+        return (minmax);
+      }
+    }
   }
 
 }
