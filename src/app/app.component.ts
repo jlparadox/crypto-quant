@@ -43,7 +43,7 @@ export class AppComponent implements OnInit {
     const $this = this;
 
     this.auth.user
-      .filter(user => !!user)
+      .filter(user => !user)
       .take(1)
       .subscribe(user => {
         if (user) {
@@ -80,10 +80,11 @@ export class AppComponent implements OnInit {
       list.forEach(function (watchItem) {
         listString += listString == '' ? watchItem['symbol'] : ',' + watchItem['symbol'];
         $this.quantService.setFibonacci(watchItem);
+        $this.quantService.checkFibonacci(watchItem);
         $this.quantService.getAbsMomentum(watchItem);
       });
       // this.cryptocompare.getStreamData(listString).subscribe(stream => {
-      //     console.log(stream['_body']);
+      //     console.log(stream);
       // });
     });
   }

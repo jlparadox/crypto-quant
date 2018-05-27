@@ -14,5 +14,7 @@ export const environment = {
     messagingSenderId: '733155364394'
   },
   baseDiscordUrl: 'https://discordapp.com/api/webhooks/',
-  discordId: '439629504030310401/EIEyHOoN9vX0-vF3LhvZNYk34vl2dwHJn0_uT3T6u8NPRhTZnkzYzkwsNofwb6s1Cc0A',
+  buzzBotId: '448371632755703818/a57hhDm-OsFgDyKANsi_nfC9g2Udter6z1T2z5rMqZwwq5x35651ZZYCR2cbXgCJlUUb',
+  momentumBotId: '448377160206647296/jSNGFd2NFoTKtfucDbpGVIi0XNa5gxEnf4opKhTHNCdVgAgpdRycQzrxyyNhDdBwwLjf',
+
 };

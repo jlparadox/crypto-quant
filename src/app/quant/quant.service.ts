@@ -65,7 +65,7 @@ export class QuantService {
                       console.error('Error writing document: ', error);
                     });
                   $this.discordService.send_to_discord(
-                    'Yo, Volume buzz!: ' + 'crypto: ' + coin + ' at ' + Math.ceil(percentIncrease) + '% ');
+                    'Yo, Volume buzz!: ' + 'crypto: ' + coin + ' at ' + Math.ceil(percentIncrease) + '% ', 'buzzBotId');
                 }
 
               });
@@ -77,9 +77,38 @@ export class QuantService {
     });
   }
 
+  checkFibonacci(coin, days=5){
+    const $this = this;
+    let setFibo = true;
+    let docRef = this.db.collection("/current_fibo_level").doc(coin.symbol);
+
+    this.cryptocompare.getHistoData(coin.symbol, 'BTC', days).subscribe(histo => {
+        const currentPrice =  histo['Data'][0]['close'];
+        docRef.ref.get().then(function(doc) {
+          if($this.isNearChange(currentPrice, doc.data().fib23)){
+            console.log('Warn fib23');
+          }
+          else if($this.isNearChange(currentPrice, doc.data().fib38)){
+            console.log('Warn fib23');
+          }
+          else if($this.isNearChange(currentPrice, doc.data().fib50)){
+            console.log('Warn fib23');
+          }
+          else if($this.isNearChange(currentPrice, doc.data().fib61)){
+            console.log('Warn fib23');
+          }
+          else if($this.isNearChange(currentPrice, doc.data().fib78)){
+            console.log('Warn fib23');
+          }
+        });
+    });
+  }
+
   setFibonacci(coin, days=30){
     const $this = this;
     let setFibo = true;
+    let docRef = this.db.collection("/current_fibo_level").doc(coin.symbol);
+
     this.cryptocompare.getHistoData(coin.symbol, 'BTC', days).subscribe(histo => {
       const hi = $this.getMaxOrMin(histo, true);
       const lo =  $this.getMaxOrMin(histo, false);
@@ -113,8 +142,10 @@ export class QuantService {
     });
   }
 
-  getFibonacci(coin){
-    const fibo = this.db.collection('/current_fibo_level').valueChanges();
+  isNearChange(price, refPrice, tolerance=5){
+    const chng = refPrice - price;
+    const prcntIncrease = (chng / price) * 100
+    return ((Math.abs(prcntIncrease)) <= tolerance);
   }
 
   getAbsMomentum(coin, days = 15, increase = 100) {
@@ -129,7 +160,7 @@ export class QuantService {
           if (absoluteMomentum > increase) {
             console.log('Yo, High Momentum!: ' + coin.symbol + ' at ' + Math.ceil(absoluteMomentum) + '% ');
             $this.discordService.send_to_discord(
-              'Yo, High Momentum!: ' + 'crypto: ' + coin.symbol + ' at ' + Math.ceil(absoluteMomentum) + '% ');
+              'Yo, High Momentum!: ' + 'crypto: ' + coin.symbol + ' at ' + Math.ceil(absoluteMomentum) + '% ', 'momentumBotId');
           } // const smAbsoluteMomemntum = sma(rcdm,sm) // returns the moving average ((rcdm + sm) / sm)
         });
       }

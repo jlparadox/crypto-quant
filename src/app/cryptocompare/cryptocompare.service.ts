@@ -1,8 +1,11 @@
 import {Http, Headers} from '@angular/http';
 import {Injectable} from '@angular/core';
-
+import "rxjs/Rx";
+import "rxjs/add/observable/interval";
+import "rxjs/observable/IntervalObservable";
 
 import 'rxjs/add/operator/map';
+import { IntervalObservable } from 'rxjs/observable/IntervalObservable';
 
 @Injectable()
 export class CryptoCompareService {
@@ -24,8 +27,12 @@ export class CryptoCompareService {
   }
 
   getStreamData(list){
-    return this.http.get('https://min-api.cryptocompare.com/data/subsWatchlist?fsyms='
-    + list + '&tsym=USD');
+    return IntervalObservable
+        .create(5000) //5 second interval
+        .flatMap(() => {
+        return this.http.get('https://min-api.cryptocompare.com/data/subsWatchlist?fsyms='
+        + list + '&tsym=USD').map(response => response.json());
+    });
   }
 
 

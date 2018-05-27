@@ -8,11 +8,11 @@ export class DiscordService {
   discord_url: string;
 
   constructor(private http: HttpClient) {
-    this.discord_url = environment.baseDiscordUrl + environment.discordId;
+    this.discord_url = environment.baseDiscordUrl + environment.buzzBotId;
   }
 
-  send_to_discord(message){
-    this.http.post(this.discord_url,
+  send_to_discord(message, botId){
+    this.http.post(environment.baseDiscordUrl + environment[botId],
       {
         content: message,
       })
