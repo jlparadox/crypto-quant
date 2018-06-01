@@ -5,20 +5,32 @@ import "rxjs/add/observable/interval";
 import "rxjs/observable/IntervalObservable";
 
 import 'rxjs/add/operator/map';
+import { Observable } from 'rxjs';
 import { IntervalObservable } from 'rxjs/observable/IntervalObservable';
+import {LocalStorageService} from 'angular-2-local-storage';
 
 @Injectable()
 export class CryptoCompareService {
 
   constructor(
-    private http: Http) {
+    private http: Http,
+    private localStorageService: LocalStorageService) {
   }
 
-  getHistoData(symA, symB = 'BTC', limit = 10, exchange = 'Binance') {
+  getHistoData(symA, symB = 'BTC', limit = 10, exchange = 'Binance', reset=false) {
     symB = symA === 'BTC' ? 'USDT' : symB;
-    return this.http.get('https://min-api.cryptocompare.com/data/histoday?fsym='
-      + symA + '&tsym=' + symB + '&limit=' + limit + '&aggregate=5&e=' + exchange)
-      .map(res => res.json());
+    const coinData = this.localStorageService.get(symA)
+    if(coinData && coinData['Response'] === 'Success' && coinData['Data'].length > limit && reset==false){
+      var source = Observable.create(observer => {
+        coinData['Data'] = coinData['Data'].slice(limit,-(coinData['Data'].length))
+        observer.onNext(coinData);
+      });
+      return source;
+    }
+    else
+      return this.http.get('https://min-api.cryptocompare.com/data/histoday?fsym='
+        + symA + '&tsym=' + symB + '&limit=' + limit + '&aggregate=5&e=' + exchange)
+        .map(res => res.json());
   }
 
   getExchangeData() {

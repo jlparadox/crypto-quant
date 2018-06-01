@@ -86,19 +86,24 @@ export class QuantService {
         const currentPrice =  histo['Data'][0]['close'];
         docRef.ref.get().then(function(doc) {
           if($this.isNearChange(currentPrice, doc.data().fib23)){
-            console.log('Warn fib23');
+            $this.discordService.send_to_discord(
+              'Yo,Fibo Alert!: ' + 'crypto: ' + coin.symbol + ' at 23% ', 'momentumBotId');
           }
           else if($this.isNearChange(currentPrice, doc.data().fib38)){
-            console.log('Warn fib23');
+            $this.discordService.send_to_discord(
+              'Yo,Fibo Alert!: ' + 'crypto: ' + coin.symbol + ' at 38% ', 'momentumBotId');
           }
           else if($this.isNearChange(currentPrice, doc.data().fib50)){
-            console.log('Warn fib23');
+            $this.discordService.send_to_discord(
+              'Yo,Fibo Alert!: ' + 'crypto: ' + coin.symbol + ' at 50% ', 'momentumBotId');
           }
           else if($this.isNearChange(currentPrice, doc.data().fib61)){
-            console.log('Warn fib23');
+            $this.discordService.send_to_discord(
+              'Yo,Fibo Alert!: ' + 'crypto: ' + coin.symbol + ' at 61% ', 'momentumBotId');
           }
           else if($this.isNearChange(currentPrice, doc.data().fib78)){
-            console.log('Warn fib23');
+            $this.discordService.send_to_discord(
+              'Yo,Fibo Alert!: ' + 'crypto: ' + coin.symbol + ' at 78% ', 'momentumBotId');
           }
         });
     });

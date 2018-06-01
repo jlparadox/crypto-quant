@@ -66,7 +66,10 @@ export class AppComponent implements OnInit {
     const dataBinance = this.localStorageService.get('binance_data');
     const coins = Object.keys(dataBinance);
     coins.forEach(coin => {
-      this.quantService.getVolumeBuzz(coin);
+      this.cryptocompare.getHistoData(coin, 'BTC', 50, 'Binance', true).subscribe(histo => {
+        this.localStorageService.set(coin, histo);
+        this.quantService.getVolumeBuzz(coin);
+      });
     });
     this.filterByWatchList();
     this.filterByPortfolio();
@@ -83,9 +86,6 @@ export class AppComponent implements OnInit {
         $this.quantService.checkFibonacci(watchItem);
         $this.quantService.getAbsMomentum(watchItem);
       });
-      // this.cryptocompare.getStreamData(listString).subscribe(stream => {
-      //     console.log(stream);
-      // });
     });
   }
 
