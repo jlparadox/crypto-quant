@@ -66,7 +66,9 @@ export class AppComponent implements OnInit {
     const dataBinance = this.localStorageService.get('binance_data');
     const coins = Object.keys(dataBinance);
     coins.forEach(coin => {
-      this.cryptocompare.getHistoData(coin, 'BTC', 50, 'Binance', true).subscribe(histo => {
+      const currentDate = this.quantService.formatDate(new Date());
+      const triggerReset: boolean = (currentDate == this.localStorageService.get('stored_date')) ? false : true;
+      this.cryptocompare.getHistoData(coin, 'BTC', 50, 'Binance', triggerReset).subscribe(histo => {
         this.localStorageService.set(coin, histo);
         this.quantService.getVolumeBuzz(coin);
       });
